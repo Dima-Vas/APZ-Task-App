@@ -5,7 +5,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,26 +33,34 @@ public class FacadeController {
 
     private static Long currUUID = 0l;
 
-    private String loggingPort = "8081";
+    private List<String> loggingPorts = Arrays.asList("8083", "8084", "8088");
 
     private String messagingPort = "8082";
 
+    private String getResponse(String port) {
+        WebClient webClient = WebClient.create();
+        String url = String.format("http://localhost:%s/", port);
+        @SuppressWarnings("null")
+        String responseBody = webClient.get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        return responseBody;
+    }
+
     @GetMapping("/")
     public String getContent() {
-        String[] ports = {loggingPort, messagingPort};
-        String[] responses = {"", ""};
-        for (int i = 0; i < ports.length; ++i) {
-            WebClient webClient = WebClient.create();
-            String url = String.format("http://localhost:%s/", ports[i]);
-            @SuppressWarnings("null")
-            String responseBody = webClient.get()
-                    .uri(url)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-            responses[i] = responseBody;
+        List<String> responses = new ArrayList<>();
+        responses.add(getResponse(messagingPort));
+        for (String port : loggingPorts) {
+            try {
+                responses.add(getResponse(port));
+            }  catch (Exception e) {
+                System.out.println("Warning : it seems that port " + port + " is off.");
+            }
         }
-        return Arrays.toString(responses);
+        return String.valueOf(responses);
     }
 
     @PostMapping("/")
@@ -58,7 +69,11 @@ public class FacadeController {
     ) {
         Long newID = currUUID++;
         WebClient webClient = WebClient.create();
-        String url = String.format("http://localhost:%s/", loggingPort);
+        String url = String.format("http://localhost:%s/", 
+                loggingPorts.get(
+                    new Random().nextInt(loggingPorts.size())
+                    ));
+        System.out.println(url);
         Mono<String> requestBody = Mono.just(String.format("id=%d&log=%s", newID, log));
         @SuppressWarnings("null")
         String responseBody = webClient.post()

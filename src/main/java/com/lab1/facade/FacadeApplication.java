@@ -7,9 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 @SpringBootApplication
 @PropertySource(value = { "application.properties","facade.properties" })
 public class FacadeApplication {
-
 	public static void main(String[] args) {
 		SpringApplication.run(FacadeApplication.class, args);
 	}
-
 }

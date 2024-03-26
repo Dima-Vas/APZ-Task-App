@@ -5,9 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.PropertySource;
 
 @SpringBootApplication
-@PropertySource(value = { "application.properties","logging.properties" })
-public class LoggingApplication {
+@PropertySource(value = { "second.properties","application.properties" })
+public class LoggingApplication2 {
     public static void main(String[] args) {
-        SpringApplication.run(LoggingApplication.class, args);
+        System.setProperty("server.port", "8084");
+        SpringApplication.run(LoggingApplication2.class, args);
     }
 }
