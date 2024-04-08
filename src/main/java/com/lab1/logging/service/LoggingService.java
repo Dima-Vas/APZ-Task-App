@@ -31,7 +31,7 @@ public class LoggingService {
         keySet().
         stream().
         map(key -> hzMap.get(key)).
-        collect(Collectors.joining(", ", "{", "}"));
+        collect(Collectors.joining(", ", "{", "}\n"));
         return mapAsString;
     }
 
