@@ -35,7 +35,7 @@ public class FacadeController {
 
     private List<String> loggingPorts = Arrays.asList("8083", "8084", "8088");
 
-    private String messagingPort = "8082";
+    private List<String> messagingPorts = Arrays.asList("8082", "8089");
 
     private String getResponse(String port) {
         WebClient webClient = WebClient.create();
@@ -49,10 +49,9 @@ public class FacadeController {
         return responseBody;
     }
 
-    @GetMapping("/")
+    @GetMapping("/log/")
     public String getContent() {
         List<String> responses = new ArrayList<>();
-        responses.add(getResponse(messagingPort));
         for (String port : loggingPorts) {
             try {
                 responses.add(getResponse(port));
@@ -62,8 +61,20 @@ public class FacadeController {
         }
         return String.valueOf(responses);
     }
+    
+    @GetMapping("/message/")
+    public String getMessage() {
+        List<String> responses = new ArrayList<>();
+        String port = messagingPorts.get(new Random().nextInt(messagingPorts.size()));
+        try {
+            responses.add(getResponse(port));
+        }  catch (Exception e) {
+            System.out.println("Warning : it seems that port " + port + " is off.");
+        }
+        return String.valueOf(responses);
+    }
 
-    @PostMapping("/")
+    @PostMapping("/log/")
     public String postNewLog(
         @RequestParam("log") String log
     ) {
@@ -75,6 +86,28 @@ public class FacadeController {
                     ));
         System.out.println(url);
         Mono<String> requestBody = Mono.just(String.format("id=%d&log=%s", newID, log));
+        @SuppressWarnings("null")
+        String responseBody = webClient.post()
+                .uri(url)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(requestBody, String.class)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        return responseBody;
+    }
+
+    @PostMapping("/message/")
+    public String postNewMessage(
+        @RequestParam("message") String message
+    ) {
+        WebClient webClient = WebClient.create();
+        String url = String.format("http://localhost:%s/", 
+                messagingPorts.get(
+                    new Random().nextInt(messagingPorts.size())
+                    ));
+        System.out.println(url);
+        Mono<String> requestBody = Mono.just(String.format("message=%s", message));
         @SuppressWarnings("null")
         String responseBody = webClient.post()
                 .uri(url)
